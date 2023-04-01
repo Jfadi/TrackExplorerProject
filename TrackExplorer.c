@@ -70,6 +70,7 @@ uint16_t ain2;
 uint16_t ain9;
 uint16_t ain8;
 uint16_t input;
+volatile  int flag = 0;
 void System_Init(void);
 void LEDSW_Init(void);
 void Motor_Init(void);
@@ -79,7 +80,7 @@ void ReadADCFIRFilter(uint16_t *ain2, uint16_t *ain9, uint16_t *ain8);
 void ReadADCIIRFilter(uint16_t *ain2, uint16_t *ain9, uint16_t *ain8);
 uint16_t median(uint16_t u1, uint16_t u2, uint16_t u3);
 void ReadADCMedianFilter(uint16_t *ain2, uint16_t *ain9, uint16_t *ain8);// This function samples AIN2 (PE1), AIN9 (PE4), AIN8 (PE5) and
-
+void Delay(int num);
 const struct State {
 uint32_t Out;
 uint32_t left_DC; // left duty cycles controle
@@ -89,7 +90,7 @@ uint32_t Next[8]; // list of next states
 typedef const struct State STyp;
 
 #define forward 		0
-#define turn_left  1
+#define turn_left  	1
 #define turn_right 	2
 #define pivot_right 3
 #define pivot_left	4
@@ -98,12 +99,12 @@ typedef const struct State STyp;
 STyp FSM[8] = {
 	{FORWARD, START_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
 	{FORWARD, LOW_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
-	{BACKWARD, START_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
-	{BACKWARD, START_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
+	{LEFTPIVOT, START_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
+	{LEFTPIVOT, START_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
 	{FORWARD, START_SPEED, LOW_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
-	{FORWARD, START_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
+	{RIGHTPIVOT, START_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
+	{RIGHTPIVOT, START_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
 	{BACKWARD, START_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
-	{FORWARD, START_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
 };
 
 int main(void){
@@ -115,12 +116,12 @@ int main(void){
 
 	// 
   while(1){
-//    if(sample) {
+   if(flag) {
       sample = 0;
       // choose one of the software filter methods
       ReadADCMedianFilter(&ahead, &right, &left);
       steering(ahead,right,left);
-//    }
+   }
   }
 }
 
@@ -166,16 +167,19 @@ void Motor_Init(void){
 void GPIOPortF_Handler(void){
 
 	if (GPIO_PORTF_RIS_R & 0x10){
-	  LED = Yellow;
+	  flag = 1;
 		GPIO_PORTF_ICR_R |= 0x10;      // acknowledge flag4: 00010000
+		PWM0_ENABLE_R |= 0x00000003; // enable both wheels
 	}
 	if (GPIO_PORTF_RIS_R & 0x01) { // switch 2 is pressed
-		LED = Blue;                       
+		flag = 0;  
+		PWM0_ENABLE_R &= ~0x00000003; // stop both wheels
+		LED = Dark;
 		GPIO_PORTF_ICR_R |= 0x01;      // acknowledge flag 0 
 	}
 }
 
-void steering(uint16_t ahead_dist,uint16_t right_dist, uint16_t left_dist){
+void steering(uint16_t left_dist,uint16_t ahead_dist, uint16_t right_dist){
   // Suggest the following simple control as starting point:
   // 1. If any one of the senors see obstacle <15cm, stop
   // 2. If left sees obstacle within 30cm, turn right
@@ -185,30 +189,38 @@ void steering(uint16_t ahead_dist,uint16_t right_dist, uint16_t left_dist){
   // Feel free to add more controlls to fine tune your robot car.
 	// Example: if error=ABS(left-right) great than 100, make a turn
   // Make sure to take care of both wheel movements and LED display here.
-	uint16_t ahead_bit = 0x00;
-	uint16_t right_bit = 0x00;
-	uint16_t left_bit = 0x00;
-  if ( right_dist > left_dist ) {
-		left_bit = 0x01;
-	} else if (right_dist < left_dist) {
-		right_bit = 0x01;
+	uint16_t ahead_bit = 0b00;
+	uint16_t right_bit = 0b00;
+	uint16_t left_bit = 0b00;
+	
+	if ( ahead_dist <= IR80CM ) { 
+		LED = Blue; // Mission ended with success
 	} else {
-		right_bit = 0x00;
-		left_bit = 0x00;
-	}
-	
-	if ( ahead_dist < IR15CM ) {
-		ahead_bit = 0x01;
+	if ( left_dist > right_dist ) {
+		left_bit = 0b01;
+		right_bit = 0b00;
 	} else {
-		ahead_bit = 0x00;
+		left_bit = 0b00;
+		right_bit = 0b01;
+	}	
+	if ( ahead_dist > IR15CM ) {
+		ahead_bit = 0b01;
+		if ((right_dist > IR15CM) && (left_dist > IR15CM)) {
+			LED = Red;
+			left_bit = 0b01;
+			right_bit = 0b01;
+		}
+			input = (left_bit << 2) + (ahead_bit << 1) + (right_bit);
+	} else {
+		ahead_bit = 0b00;
+		LED = Green;
+		input = (left_bit << 2) + (ahead_bit << 1) + (right_bit);
 	}
-	
-	input = (left_bit << 2) + (ahead_bit << 1) + (right_bit);
-	//PWM0_ENABLE_R |= 0x00000003; // enable both wheels
-	//WHEEL_DIR = FSM[input].Out;
-	//PWM_PB76_Duty(FSM[input].left_DC, FSM[input].right_DC);
-
-	
+		
+		PWM_PB76_Duty(FSM[input].left_DC, FSM[input].right_DC);
+		WHEEL_DIR = FSM[input].Out;
+		Delay(5);
+	}
 }
 //void SysTick_Handler(void){
 //  sample = 1;
@@ -296,4 +308,12 @@ void ReadADCMedianFilter(uint16_t *ain2, uint16_t *ain9, uint16_t *ain8){
   *ain8 = median(ain8newest, ain8middle, ain8oldest);
   ain2oldest = ain2middle; ain9oldest = ain9middle; ain8oldest = ain8middle;
   ain2middle = ain2newest; ain9middle = ain9newest; ain8middle = ain8newest;
+}
+
+void Delay(int num){
+	unsigned long volatile time;
+  time = 727240*num/91; 
+  while(time){
+		time--;
+  }
 }
