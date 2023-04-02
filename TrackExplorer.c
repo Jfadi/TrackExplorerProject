@@ -1,37 +1,7 @@
-// TrackExplorer.c
-// Runs on TM4C123
-// This is the starter file for CECS 347 Project 2 - A Track Explorer
-// This project use PWM to control two DC Motors, SysTick timer 
-// to control sampling rate, ADC to collect analog inputs from
-// Sharp IR sensors and a potentiometer.
-// Two GP2Y0A21YK0F analog IR distance sensors are used to allow
-// the robot to follow a wall. A Minimum of two IR sensors are mounted
-// looking forward to the left and forward to the right. 
-// A optional third IR sensor looks directly forward can be used to avoid
-// a head-on collision. Basically, the goal is to control power to each wheel so the
-// left and right distances to the walls are equal.
-// If an object is detected too close to the front of the robot,
-// both wheels are immediately stopped.
-/*
-    ------------------------------------------wall---------
-                      /
-                     /
-                    / 
-                   /
-         -----------
-         |         |
-         | Robot   | ---> direction of motion and third sensor
-         |         |
-         -----------
-                   \
-                    \
-                     \
-                      \
-    ------------------------------------------wall---------
-*/
-// The original project is provided by Dr. Daniel Valvano, Jonathan Valvano
-// September 12, 2013
-// Modification is made by Dr. Min He to provide this starter project.
+// Explorer.c
+// Fadi Jarray
+// Omar Kanj
+// March 4th, 2023
 
 // PE1 connected to forward facing IR distance sensor
 // PE4 connected to forward right IR distance sensor
@@ -78,6 +48,7 @@ void Motor_Init(void);
 void steering(uint16_t ahead_dist,uint16_t right_dist, uint16_t left_dist);
 void ReadADCFIRFilter(uint16_t *ain2, uint16_t *ain9, uint16_t *ain8);
 void ReadADCIIRFilter(uint16_t *ain2, uint16_t *ain9, uint16_t *ain8);
+
 uint16_t median(uint16_t u1, uint16_t u2, uint16_t u3);
 void ReadADCMedianFilter(uint16_t *ain2, uint16_t *ain9, uint16_t *ain8);// This function samples AIN2 (PE1), AIN9 (PE4), AIN8 (PE5) and
 void Delay(int num);
@@ -95,7 +66,11 @@ typedef const struct State STyp;
 #define pivot_right 3
 #define pivot_left	4
 #define backwards		5
-
+// FSM used to steer the explorer car
+// Input logic is based on:
+// left_dist is the most significant bit
+// ahead_dist is the second most significant bit
+// right_dist is the least significant bit
 STyp FSM[8] = {
 	{FORWARD, START_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
 	{FORWARD, LOW_SPEED, START_SPEED,{forward, turn_right, pivot_right, pivot_left, turn_left, forward, pivot_right, backwards}},
@@ -112,22 +87,19 @@ int main(void){
   
   DisableInterrupts();  // disable interrupts while initializing
   EnableInterrupts();   // enable after all initialization are done
-  System_Init();
-
-	// 
+  System_Init();				// initialize PLL, ADC, MOTOR, LEDs, and Switches
+	LED = Dark;
   while(1){
-   if(flag) {
+		if (flag){
       sample = 0;
-      // choose one of the software filter methods
       ReadADCMedianFilter(&ahead, &right, &left);
       steering(ahead,right,left);
-   }
+		}
   }
 }
 
 void System_Init(void) {
   PLL_Init();           // bus clock at 16 MHz
-//  SysTick_Init();       // Optional: Initialize SysTick timer with interrupt for smapling control
   ADC_Init298();        // initialize ADC to sample AIN2 (PE1), AIN9 (PE4), AIN8 (PE5)
   LEDSW_Init();         // configure onboard LEDs and push buttons
   Motor_Init();         // Initialize signals for the two DC Motors
@@ -161,41 +133,39 @@ void Motor_Init(void){
 	PWM_PB76_Duty(START_SPEED, START_SPEED);
 }
 
-//void SysTick_Init(void){
-//}
-
 void GPIOPortF_Handler(void){
-
+	// switch 1 activates the car by setting the flag to 1 and enabeling both wheels
 	if (GPIO_PORTF_RIS_R & 0x10){
-	  flag = 1;
+		for (int i = 0; i < 10; i++){
+			ReadADCMedianFilter(&ain2, &ain9, &ain8);
+		}
+		flag = 1;
 		GPIO_PORTF_ICR_R |= 0x10;      // acknowledge flag4: 00010000
 		PWM0_ENABLE_R |= 0x00000003; // enable both wheels
 	}
+	
+	// switch 2 stops the car by setting the flag to 0 and desabling both wheels
 	if (GPIO_PORTF_RIS_R & 0x01) { // switch 2 is pressed
-		flag = 0;  
 		PWM0_ENABLE_R &= ~0x00000003; // stop both wheels
+		flag = 0;
 		LED = Dark;
 		GPIO_PORTF_ICR_R |= 0x01;      // acknowledge flag 0 
 	}
 }
 
 void steering(uint16_t left_dist,uint16_t ahead_dist, uint16_t right_dist){
-  // Suggest the following simple control as starting point:
-  // 1. If any one of the senors see obstacle <15cm, stop
-  // 2. If left sees obstacle within 30cm, turn right
-  // 3. If right sees obstacle within 30cm, turn left
-	// 4. If all sensors detect no obstacle within 35cm, stop
-  // 5. If both sensors see no obstacle within 30cm, go straight  
-  // Feel free to add more controlls to fine tune your robot car.
-	// Example: if error=ABS(left-right) great than 100, make a turn
-  // Make sure to take care of both wheel movements and LED display here.
 	uint16_t ahead_bit = 0b00;
 	uint16_t right_bit = 0b00;
 	uint16_t left_bit = 0b00;
 	
-	if ( ahead_dist <= IR80CM ) { 
+	if ( ahead_dist < IR80CM && left_dist < IR40CM && right_dist < IR40CM ) { 
+		// No obstacles at all or mission accomplished 
 		LED = Blue; // Mission ended with success
+		flag = 0;
+		PWM0_ENABLE_R &= ~0x00000003; // stop both wheels
 	} else {
+		// Traversing the maze
+		// check if the car is in the center
 	if ( left_dist > right_dist ) {
 		left_bit = 0b01;
 		right_bit = 0b00;
@@ -203,28 +173,30 @@ void steering(uint16_t left_dist,uint16_t ahead_dist, uint16_t right_dist){
 		left_bit = 0b00;
 		right_bit = 0b01;
 	}	
+	// check if there is a near ahead obstacle
 	if ( ahead_dist > IR15CM ) {
 		ahead_bit = 0b01;
+		// if there is a near ahead obstacle check where can the car turn
 		if ((right_dist > IR15CM) && (left_dist > IR15CM)) {
 			LED = Red;
 			left_bit = 0b01;
 			right_bit = 0b01;
 		}
+			// set the input for the FSM
 			input = (left_bit << 2) + (ahead_bit << 1) + (right_bit);
 	} else {
+		// NO OBSTACLE AHEAD KEEP GOING STRAIGHT
 		ahead_bit = 0b00;
 		LED = Green;
 		input = (left_bit << 2) + (ahead_bit << 1) + (right_bit);
 	}
-		
+		// input data in the FSM
 		PWM_PB76_Duty(FSM[input].left_DC, FSM[input].right_DC);
 		WHEEL_DIR = FSM[input].Out;
-		Delay(5);
+		// Intentional delay to avoid noise ( garbage data collected )
+		Delay(3);
 	}
 }
-//void SysTick_Handler(void){
-//  sample = 1;
-//}
 
 // Returns the results in the corresponding variables.  Some
 // kind of filtering is required because the IR distance sensors

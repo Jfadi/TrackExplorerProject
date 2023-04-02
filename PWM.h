@@ -8,8 +8,8 @@
 // Constant definitions based on the following hardware interface:
 // System clock is 16MHz.
 #define TOTAL_PERIOD 16000 //  16MHz/1000=16000
-#define START_SPEED 16000*0.5
-#define LOW_SPEED 6000*0.5
+#define START_SPEED 16000*0.6
+#define LOW_SPEED 8000*0.5
 
 // PB5432 are used for direction control on L298.
 // Motor 1 is connected to the left wheel, Motor 2 is connected to the right wheel.

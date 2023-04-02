@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\TrackExplorer.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\TrackExplorer.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6190004: Last Updated: Sat Apr  1 16:51:17 2023
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6190004: Last Updated: Sun Apr  2 13:09:14 2023
 <BR><P>
 <H3>Maximum Stack Usage =         92 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -774,7 +774,7 @@ Global Symbols
 <P><STRONG><a name="[93]"></a>ADC_In298</STRONG> (Thumb, 96 bytes, Stack size 12 bytes, adcmultisamples.o(.text.ADC_In298))
 <BR><BR>[Stack]<UL><LI>Max Depth = 12<LI>Call Chain = ADC_In298
 </UL>
-<BR>[Called By]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReadADCMedianFilter
+<BR>[Called By]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReadADCMedianFilter
 </UL>
 
 <P><STRONG><a name="[97]"></a>ADC_Init298</STRONG> (Thumb, 254 bytes, Stack size 4 bytes, adcmultisamples.o(.text.ADC_Init298))
@@ -783,8 +783,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;System_Init
 </UL>
 
-<P><STRONG><a name="[8f]"></a>Car_Dir_Init</STRONG> (Thumb, 140 bytes, Stack size 0 bytes, gpio.o(.text.Car_Dir_Init))
-<BR><BR>[Called By]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Motor_Init
+<P><STRONG><a name="[90]"></a>Car_Dir_Init</STRONG> (Thumb, 140 bytes, Stack size 0 bytes, gpio.o(.text.Car_Dir_Init))
+<BR><BR>[Called By]<UL><LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Motor_Init
 </UL>
 
 <P><STRONG><a name="[9c]"></a>Delay</STRONG> (Thumb, 56 bytes, Stack size 8 bytes, trackexplorer.o(.text.Delay))
@@ -793,19 +793,23 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[9b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;steering
 </UL>
 
-<P><STRONG><a name="[28]"></a>GPIOPortF_Handler</STRONG> (Thumb, 138 bytes, Stack size 0 bytes, trackexplorer.o(.text.GPIOPortF_Handler))
+<P><STRONG><a name="[28]"></a>GPIOPortF_Handler</STRONG> (Thumb, 196 bytes, Stack size 16 bytes, trackexplorer.o(.text.GPIOPortF_Handler))
+<BR><BR>[Stack]<UL><LI>Max Depth = 84<LI>Call Chain = GPIOPortF_Handler &rArr; ReadADCMedianFilter &rArr; ADC_In298
+</UL>
+<BR>[Calls]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReadADCMedianFilter
+</UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup.o(RESET)
 </UL>
 <P><STRONG><a name="[98]"></a>LEDSW_Init</STRONG> (Thumb, 290 bytes, Stack size 0 bytes, trackexplorer.o(.text.LEDSW_Init))
 <BR><BR>[Called By]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;System_Init
 </UL>
 
-<P><STRONG><a name="[8e]"></a>Motor_Init</STRONG> (Thumb, 22 bytes, Stack size 8 bytes, trackexplorer.o(.text.Motor_Init))
+<P><STRONG><a name="[8f]"></a>Motor_Init</STRONG> (Thumb, 22 bytes, Stack size 8 bytes, trackexplorer.o(.text.Motor_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 16<LI>Call Chain = Motor_Init &rArr; PWM_PB76_Duty
 </UL>
-<BR>[Calls]<UL><LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PWM_PB76_Init
-<LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Car_Dir_Init
-<LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PWM_PB76_Duty
+<BR>[Calls]<UL><LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PWM_PB76_Init
+<LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Car_Dir_Init
+<LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PWM_PB76_Duty
 </UL>
 <BR>[Called By]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;System_Init
 </UL>
@@ -816,30 +820,31 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;System_Init
 </UL>
 
-<P><STRONG><a name="[91]"></a>PWM_PB76_Duty</STRONG> (Thumb, 38 bytes, Stack size 8 bytes, pwm.o(.text.PWM_PB76_Duty))
+<P><STRONG><a name="[92]"></a>PWM_PB76_Duty</STRONG> (Thumb, 38 bytes, Stack size 8 bytes, pwm.o(.text.PWM_PB76_Duty))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = PWM_PB76_Duty
 </UL>
-<BR>[Called By]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Motor_Init
+<BR>[Called By]<UL><LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Motor_Init
 <LI><a href="#[9b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;steering
 </UL>
 
-<P><STRONG><a name="[90]"></a>PWM_PB76_Init</STRONG> (Thumb, 254 bytes, Stack size 0 bytes, pwm.o(.text.PWM_PB76_Init))
-<BR><BR>[Called By]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Motor_Init
+<P><STRONG><a name="[91]"></a>PWM_PB76_Init</STRONG> (Thumb, 254 bytes, Stack size 0 bytes, pwm.o(.text.PWM_PB76_Init))
+<BR><BR>[Called By]<UL><LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Motor_Init
 </UL>
 
-<P><STRONG><a name="[92]"></a>ReadADCMedianFilter</STRONG> (Thumb, 182 bytes, Stack size 56 bytes, trackexplorer.o(.text.ReadADCMedianFilter))
+<P><STRONG><a name="[8e]"></a>ReadADCMedianFilter</STRONG> (Thumb, 182 bytes, Stack size 56 bytes, trackexplorer.o(.text.ReadADCMedianFilter))
 <BR><BR>[Stack]<UL><LI>Max Depth = 68<LI>Call Chain = ReadADCMedianFilter &rArr; ADC_In298
 </UL>
 <BR>[Calls]<UL><LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;median
 <LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ADC_In298
 </UL>
-<BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
+<BR>[Called By]<UL><LI><a href="#[28]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;GPIOPortF_Handler
+<LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
 <P><STRONG><a name="[95]"></a>System_Init</STRONG> (Thumb, 20 bytes, Stack size 8 bytes, trackexplorer.o(.text.System_Init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = System_Init &rArr; Motor_Init &rArr; PWM_PB76_Duty
 </UL>
-<BR>[Calls]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Motor_Init
+<BR>[Calls]<UL><LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Motor_Init
 <LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;LEDSW_Init
 <LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ADC_Init298
 <LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PLL_Init
@@ -847,12 +852,12 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[85]"></a>main</STRONG> (Thumb, 82 bytes, Stack size 24 bytes, trackexplorer.o(.text.main))
+<P><STRONG><a name="[85]"></a>main</STRONG> (Thumb, 96 bytes, Stack size 24 bytes, trackexplorer.o(.text.main))
 <BR><BR>[Stack]<UL><LI>Max Depth = 92 + Unknown Stack Size
 <LI>Call Chain = main &rArr; ReadADCMedianFilter &rArr; ADC_In298
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;steering
-<LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReadADCMedianFilter
+<LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReadADCMedianFilter
 <LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;System_Init
 <LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;EnableInterrupts
 <LI><a href="#[99]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DisableInterrupts
@@ -863,14 +868,14 @@ Global Symbols
 <P><STRONG><a name="[94]"></a>median</STRONG> (Thumb, 160 bytes, Stack size 8 bytes, trackexplorer.o(.text.median))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = median
 </UL>
-<BR>[Called By]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReadADCMedianFilter
+<BR>[Called By]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ReadADCMedianFilter
 </UL>
 
-<P><STRONG><a name="[9b]"></a>steering</STRONG> (Thumb, 324 bytes, Stack size 32 bytes, trackexplorer.o(.text.steering))
+<P><STRONG><a name="[9b]"></a>steering</STRONG> (Thumb, 380 bytes, Stack size 32 bytes, trackexplorer.o(.text.steering))
 <BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = steering &rArr; Delay
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Delay
-<LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PWM_PB76_Duty
+<LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PWM_PB76_Duty
 </UL>
 <BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
